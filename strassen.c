@@ -12,7 +12,7 @@
 
 int main(int argc, char *argv[]) {
     int dimension = atoi(argv[2]);
-    int inputfile = atoi(argv[3]);
+    char* inputfile = argv[3];
 
     printf("%s %s %s %s\n", argv[0], argv[1], argv[2], argv[3]);
 
