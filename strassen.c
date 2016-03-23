@@ -15,32 +15,32 @@
 #include <unistd.h>
 
 
-float** construct_matrix(int dimension, FILE* fp) {
-    float** matrix = malloc(dimension * sizeof(int*));
+int** construct_matrix(int dimension, FILE* fp) {
+    int** matrix = malloc(dimension * sizeof(int*));
     char buf[256];
     for (int i = 0; i < dimension; i++) {
         matrix[i] = malloc(dimension * sizeof(int));
         for (int j = 0; j < dimension; j++) {
             fgets(buf, sizeof(buf), fp);
             matrix[i][j] = atoi(buf);
-            printf("%.0f ", matrix[i][j]);
+            printf("%d ", matrix[i][j]);
         }
         printf("\n");
     }
     return matrix;
 }
 
-void print_graph(float** matrix, int dimension) {
+void print_graph(int** matrix, int dimension) {
     // prints out adjacency matrix
     for (int i = 0; i < dimension; ++i) {
         for (int j = 0; j < dimension; ++j) {
-            printf("%.0f ", matrix[i][j]);
+            printf("%d ", matrix[i][j]);
         }
         printf("\n");
     }
 }
 
-float** strassen(float** matrix_A, float** matrix_B, int dimension, int crossover_dimension) {
+int** strassen(int** matrix_A, int** matrix_B, int dimension, int crossover_dimension) {
     return matrix_A;
 }
 
@@ -50,8 +50,8 @@ int main(int argc, char *argv[]) {
 
     FILE* fp;
     fp = fopen(inputfile, "r");
-    float** matrix_A = construct_matrix(dimension, fp);
-    float** matrix_B = construct_matrix(dimension, fp);
+    int** matrix_A = construct_matrix(dimension, fp);
+    int** matrix_B = construct_matrix(dimension, fp);
 
     // times the calculation for all possible crossover points
     time_t t;
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     int total_time;
     while (crossover_dimension < dimension) {
         clock_t start = clock();
-        float** product_matrix = strassen(matrix_A, matrix_B, dimension, crossover_dimension);
+        int** product_matrix = strassen(matrix_A, matrix_B, dimension, crossover_dimension);
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
 
         if (crossover_dimension == 1) {
