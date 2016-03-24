@@ -22,6 +22,14 @@ typedef struct matrix {
     int** mat;
 } matrix; 
 
+int** intialize_matrix(int dimension) {
+    int** matrix = malloc(dimension * sizeof(int) + dimension * dimension * sizeof(int));
+    int* pos = (int*) (matrix + dimension);
+    for (int i = 0; i < dimension; i++) {
+        matrix[i] = pos + i * dimension;
+    }
+    return matrix;
+}
 
 matrix construct_matrix(int dimension, FILE* fp) {
     matrix m; 
@@ -59,15 +67,33 @@ void print_matrix(matrix M) {
     }
 }
 
-// matrix sum(matrix A, matrix B, int dimension) {
-//     int sum_matrix[dimension][dimension];
-//     for (int i = 0; i < dimension; i++) {
-//         for (int j = 0; j < dimension; j++) {
-//             sum_matrix[i][j] = matrix_A[i][j] + matrix_B[i][j];
-//         }
-//     }
-//     return sum_matrix;
-// }
+matrix sum(matrix A, matrix B, matrix C) {
+    int a_i, b_i;
+    int a_j, b_j;
+    int i, j;
+
+    for (a_i = A.fr, b_i = B.fr, i = 0; a_i < A.lr; a_i++, b_i ++, i++) {
+        for (a_j = A.fc, b_j = B.fc, j = 0; a_j < A.lc; a_j++, b_j++, j++) {
+            C.mat[i][j] = A.mat[a_i][a_j] + B.mat[b_i][b_j];
+        }
+    }
+
+    return C;
+}
+
+matrix diff(matrix A, matrix B, matrix C) {
+    int a_i, b_i;
+    int a_j, b_j;
+    int i, j;
+
+    for (a_i = A.fr, b_i = B.fr, i = 0; a_i < A.lr; a_i++, b_i ++, i++) {
+        for (a_j = A.fc, b_j = B.fc, j = 0; a_j < A.lc; a_j++, b_j++, j++) {
+            C.mat[i][j] = A.mat[a_i][a_j] - B.mat[b_i][b_j];
+        }
+    }
+
+    return C;
+}
 
 matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension < crossover_dimension) {
@@ -85,29 +111,79 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
 
 
     matrix temp_matrices[9];
+    for (int i = 0; i < 9; i++) {
+        temp_matrices[i].fr = 0;
+        temp_matrices[i].lr = dimension/2;
+        temp_matrices[i].fc = 0;
+        temp_matrices[i].lc = dimension/2; 
+        temp_matrices[i].mat = intialize_matrix(dimension/2);
+    }
+
     // array[0] = F-H; // diff(F, H, array[0])
+    diff(F, H, temp_matrices[0]);
+
     // array[0] = strassen(A, array[0]); // P1
+    temp_matrices[0] = strassen(A, temp_matrices[0], dimension/2, crossover_dimension);
+
     // array[1] = A+B;
+    sum(A, B, temp_matrices[1]);
+
     // array[1] = strassen(array[1], H); // P2
+    temp_matrices[1] = strassen(temp_matrices[1], H, dimension/2, crossover_dimension);
+
     // array[2] = C+D;
+    sum(C, D, temp_matrices[2]);
+
     // array[2] = strassen(array[2], E); // P3
+    temp_matrices[2] = strassen(temp_matrices[2], E, dimension/2, crossover_dimension);
+
     // array[3] = G-E;
+    diff(G, E, temp_matrices[3]);
+
     // array[3] = strassen(D, array[3]); // P4
+    temp_matrices[3] = strassen(D, temp_matrices[3], dimension/2, crossover_dimension);
+
     // array[4] = A+D;
+    sum(A, D, temp_matrices[4]);
+
     // array[5] = E+H;
+    sum(E, H, temp_matrices[5]);
+
     // array[4] = strassen(array[4], array[5]); // P5
+    temp_matrices[4] = strassen(temp_matrices[4], temp_matrices[5], dimension/2, crossover_dimension);
+
     // array[5] = B-D;
+    diff(B, D, temp_matrices[5]);
+
     // array[6] = G+H;
+    sum(G, H, temp_matrices[6]);
+
     // array[5] = strassen(array[5], array[6]); // P6
+    temp_matrices[5] = strassen(temp_matrices[5], temp_matrices[6], dimension/2, crossover_dimension);
+
     // array[6] = A-C;
+    diff(A, C, temp_matrices[6]);
+
     // array[7] = E+F;
+    sum(E, F, temp_matrices[7]);
+
     // array[6] = strassen(array[6], array[7]); // P7
+    temp_matrices[6] = strassen(temp_matrices[6], temp_matrices[7], dimension/2, crossover_dimension);
+
     // array[7] = array[4] + array[3] - array[1] + array[5]; // AE + BG
+    sum(diff(sum(temp_matrices[4], temp_matrices[3], temp_matrices[7]), temp_matrices[1], temp_matrices[8]), temp_matrices[5], temp_matrices[7]);
+
     // array[5] = array[0] + array[1]; // AF + BH
+    sum(temp_matrices[0], temp_matrices[1], temp_matrices[5]);
+
     // array[1] = array[2] + array[3]; // CE + DG
+    sum(temp_matrices[2], temp_matrices[3], temp_matrices[1]);
+
     // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
+    diff(diff(sum(temp_matrices[4], temp_matrices[0], temp_matrices[3]), temp_matrices[2], temp_matrices[8]), temp_matrices[6], temp_matrices[3]);
 
     return A;
+
 }
 
 int main(int argc, char *argv[]) {
