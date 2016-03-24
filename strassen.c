@@ -118,6 +118,7 @@ void standard_multiplication(matrix A, matrix B, matrix* C) {
 
 matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension <= crossover_dimension) {
+        printf("STANDARD\n");
     	matrix temp_matrix = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, intialize_matrix(dimension)};
         standard_multiplication(M1, M2, &temp_matrix);
         return temp_matrix;
@@ -141,17 +142,24 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
         temp_matrices[i].mat = intialize_matrix(dimension/2);
     }
 
+    printf("INITIALIZED\n");
+
     // array[0] = F-H; // diff(F, H, array[0])
     diff(F, H, temp_matrices[0]);
 
     // array[0] = strassen(A, array[0]); // P1
     temp_matrices[0] = strassen(A, temp_matrices[0], dimension/2, crossover_dimension);
+    printf("Done with first strassen\n");
 
     // array[1] = A+B;
     sum(A, B, temp_matrices[1]);
+    printf("Done with sum\n");
+
 
     // array[1] = strassen(array[1], H); // P2
     temp_matrices[1] = strassen(temp_matrices[1], H, dimension/2, crossover_dimension);
+    printf("Done with second strassen\n");
+
 
     // array[2] = C+D;
     sum(C, D, temp_matrices[2]);
@@ -204,6 +212,8 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
     diff(diff(sum(temp_matrices[4], temp_matrices[0], temp_matrices[3]), temp_matrices[2], temp_matrices[8]), temp_matrices[6], temp_matrices[3]);
 
+    printf("COMBINE\n");
+
     // combine matrices
     M1.fr = 0;
     M1.lr = dimension;
@@ -226,6 +236,8 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     	}
     }
 
+    printf("DONE COMBINING\n");
+
     return M1;
 }
 
@@ -246,7 +258,9 @@ int main(int argc, char *argv[]) {
     int total_time;
     while (crossover_dimension <= dimension) {
         clock_t start = clock();
+        printf("ENTERING STRASSEN\n");
         matrix product_matrix = strassen(A, B, dimension, crossover_dimension);
+        printf("LEAVING STRASSEN\n");
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
 	
 		printf("PRODUCT CROSSOVER %d\n", crossover_dimension);
