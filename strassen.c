@@ -212,10 +212,10 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     		if (i < dimension/2 && j < dimension/2) {
     			M1.mat[i][j] = temp_matrices[7].mat[i][j];  			
     		}
-    		else if (i >= dimension/2 && j < dimension/2) {
+    		else if (i < dimension/2 && j >= dimension/2) {
     			M1.mat[i][j] = temp_matrices[5].mat[i % dimension/2][j];
     		}
-    		else if (i < dimension/2 && j >= dimension/2) {
+    		else if (i >= dimension/2 && j < dimension/2) {
     			M1.mat[i][j] = temp_matrices[1].mat[i][j % dimension/2];
     		}
     		else {
