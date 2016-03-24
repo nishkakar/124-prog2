@@ -37,7 +37,7 @@ matrix construct_matrix(int dimension, FILE* fp) {
         for (int j = 0; j < dimension; j++) {
             fgets(buf, sizeof(buf), fp);
             matrix[i][j] = atoi(buf);
-        }
+         }
     }
 
     m.fr = 0;
@@ -68,6 +68,26 @@ void print_matrix(matrix M) {
 //     }
 //     return sum_matrix;
 // }
+
+// AB = C
+void standard_multiplication(matrix A, matrix B, matrix* C) {
+	int dimension = A.lr - A.fr, sum = 0;
+
+	C->fr = 0;
+	C->lr = dimension;
+	C->fc = 0;
+	C->lc = dimension;
+
+	for (int i = 0, Ai = A.fr; i < dimension; ++i, ++Ai) {
+		for (int j = 0, Bj = B.fc; j < dimension; ++j, ++Bj) {
+			for (int Ak = A.fc, Bk = B.fr; Ak < A.lc; ++Ak, ++Bk) {
+				sum += A.mat[Ai][Ak] * B.mat[Bk][Bj];
+			}
+
+			C->mat[i][j] = sum;
+		}
+	}
+}
 
 matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension < crossover_dimension) {
