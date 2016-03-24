@@ -22,7 +22,7 @@ typedef struct matrix {
     int** mat;
 } matrix; 
 
-int** intialize_matrix(int dimension) {
+int** initialize_matrix(int dimension) {
     int** matrix = malloc(dimension * sizeof(int) + dimension * dimension * sizeof(int));
     int* pos = (int*) (matrix + dimension);
     for (int i = 0; i < dimension; i++) {
@@ -82,18 +82,14 @@ matrix sum(matrix A, matrix B, matrix C) {
     return C;
 }
 
-matrix diff(matrix A, matrix B, matrix C, matrix* test) {
+matrix diff(matrix A, matrix B, matrix C) {
     int dimension = A.lr - A.fr;
     printf("DIM: %d\n", dimension);
 
     for (int a_i = A.fr, b_i = B.fr, i = 0; i < dimension; ++a_i, ++b_i, ++i) {
         for (int a_j = A.fc, b_j = B.fc, j = 0; j < dimension; ++a_j, ++b_j, ++j) {
             printf("entering %d %d %d %d %d %d %d\n", i, j, a_i, a_j, b_i, b_j, A.mat[a_i][a_j] - B.mat[b_i][b_j]);
-            printf("VALUE OF test[1].mat[0][0] = %d\n", test[1].mat[0][0]);
-            printf("ADDRESS OF test[1].mat[0] = %p\n", test[1].mat[0]);
-            test[0].mat[i][j] = A.mat[a_i][a_j] - B.mat[b_i][b_j];
-            printf("ADDRESS OF test[1].mat[0] = %p\n", test[1].mat[0]);
-            printf("VALUE OF test[1].mat[0][0] = %d\n", test[1].mat[0][0]);
+            C.mat[i][j] = A.mat[a_i][a_j] - B.mat[b_i][b_j];
             printf("exiting\n\n");
         }
     }
@@ -125,7 +121,7 @@ void standard_multiplication(matrix A, matrix B, matrix* C) {
 matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension <= crossover_dimension) {
         printf("STANDARD\n");
-    	matrix temp_matrix = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, .mat = intialize_matrix(dimension)};
+    	matrix temp_matrix = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, .mat = initialize_matrix(dimension)};
         standard_multiplication(M1, M2, &temp_matrix);
         return temp_matrix;
     }
@@ -141,114 +137,124 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     matrix G = {.fr = dimension/2, .lr = dimension, .fc = 0, .lc = dimension/2, .mat = M2.mat};
     matrix H = {.fr = dimension/2, .lr = dimension, .fc = dimension/2, .lc = dimension, .mat = M2.mat};
 
-    matrix temp_matrices[9];
-    for (int i = 0; i < 9; i++) {
-        temp_matrices[i].fr = 0;
-        temp_matrices[i].lr = dimension/2;
-        temp_matrices[i].fc = 0;
-        temp_matrices[i].lc = dimension/2; 
-        temp_matrices[i].mat = intialize_matrix(dimension/2);
-    }
+    matrix temp_matrices0 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
+
+    // for (int i = 0; i < 9; i++) {
+    //     temp_matrices[i].fr = 0;
+    //     temp_matrices[i].lr = dimension/2;
+    //     temp_matrices[i].fc = 0;
+    //     temp_matrices[i].lc = dimension/2; 
+    //     temp_matrices[i].mat = initialize_matrix(dimension/2);
+    // }
 
     printf("INITIALIZED\n");
 
     // array[0] = F-H; // diff(F, H, array[0])
-    print_matrix(M2);
-    print_matrix(F);
-    print_matrix(H);
-    printf("===================%p\n", temp_matrices[1].mat[0]);
-    diff(F, H, temp_matrices[0], temp_matrices);
-    printf("===================%p\n", temp_matrices[1].mat[0]);
+    diff(F, H, temp_matrices0);
 
     // array[0] = strassen(A, array[0]); // P1
-    temp_matrices[0] = strassen(A, temp_matrices[0], dimension/2, crossover_dimension);
+    temp_matrices0 = strassen(A, temp_matrices0, dimension/2, crossover_dimension);
     printf("Done with first strassen\n");
 
+    matrix temp_matrices1 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
+
     // array[1] = A+B;
-    sum(A, B, temp_matrices[1]);
+    sum(A, B, temp_matrices1);
     printf("Done with sum\n");
 
+    // array[1] = strassen(array[1], H); // P2
+    temp_matrices1 = strassen(temp_matrices1, H, dimension/2, crossover_dimension);
+    printf("Done with second strassen\n");
 
-    // // array[1] = strassen(array[1], H); // P2
-    // temp_matrices[1] = strassen(temp_matrices[1], H, dimension/2, crossover_dimension);
-    // printf("Done with second strassen\n");
+    matrix temp_matrices2 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
 
+    // array[2] = C+D;
+    sum(C, D, temp_matrices2);
 
-    // // array[2] = C+D;
-    // sum(C, D, temp_matrices[2]);
+    // array[2] = strassen(array[2], E); // P3
+    temp_matrices2 = strassen(temp_matrices2, E, dimension/2, crossover_dimension);
 
-    // // array[2] = strassen(array[2], E); // P3
-    // temp_matrices[2] = strassen(temp_matrices[2], E, dimension/2, crossover_dimension);
+    matrix temp_matrices3 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
 
-    // // array[3] = G-E;
-    // diff(G, E, temp_matrices[3]);
+    // array[3] = G-E;
+    diff(G, E, temp_matrices3);
 
-    // // array[3] = strassen(D, array[3]); // P4
-    // temp_matrices[3] = strassen(D, temp_matrices[3], dimension/2, crossover_dimension);
+    // array[3] = strassen(D, array[3]); // P4
+    temp_matrices3 = strassen(D, temp_matrices3, dimension/2, crossover_dimension);
 
-    // // array[4] = A+D;
-    // sum(A, D, temp_matrices[4]);
+    matrix temp_matrices4 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
 
-    // // array[5] = E+H;
-    // sum(E, H, temp_matrices[5]);
+    // array[4] = A+D;
+    sum(A, D, temp_matrices4);
 
-    // // array[4] = strassen(array[4], array[5]); // P5
-    // temp_matrices[4] = strassen(temp_matrices[4], temp_matrices[5], dimension/2, crossover_dimension);
+    matrix temp_matrices5 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
 
-    // // array[5] = B-D;
-    // diff(B, D, temp_matrices[5]);
+    // array[5] = E+H;
+    sum(E, H, temp_matrices5);
 
-    // // array[6] = G+H;
-    // sum(G, H, temp_matrices[6]);
+    // array[4] = strassen(array[4], array[5]); // P5
+    temp_matrices4 = strassen(temp_matrices4, temp_matrices5, dimension/2, crossover_dimension);
 
-    // // array[5] = strassen(array[5], array[6]); // P6
-    // temp_matrices[5] = strassen(temp_matrices[5], temp_matrices[6], dimension/2, crossover_dimension);
+    // array[5] = B-D;
+    diff(B, D, temp_matrices5);
 
-    // // array[6] = A-C;
-    // diff(A, C, temp_matrices[6]);
+    matrix temp_matrices6 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
 
-    // // array[7] = E+F;
-    // sum(E, F, temp_matrices[7]);
+    // array[6] = G+H;
+    sum(G, H, temp_matrices6);
 
-    // // array[6] = strassen(array[6], array[7]); // P7
-    // temp_matrices[6] = strassen(temp_matrices[6], temp_matrices[7], dimension/2, crossover_dimension);
+    // array[5] = strassen(array[5], array[6]); // P6
+    temp_matrices5 = strassen(temp_matrices5, temp_matrices6, dimension/2, crossover_dimension);
 
-    // // array[7] = array[4] + array[3] - array[1] + array[5]; // AE + BG
-    // sum(diff(sum(temp_matrices[4], temp_matrices[3], temp_matrices[7]), temp_matrices[1], temp_matrices[8]), temp_matrices[5], temp_matrices[7]);
+    // array[6] = A-C;
+    diff(A, C, temp_matrices6);
 
-    // // array[5] = array[0] + array[1]; // AF + BH
-    // sum(temp_matrices[0], temp_matrices[1], temp_matrices[5]);
+    matrix temp_matrices7 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
 
-    // // array[1] = array[2] + array[3]; // CE + DG
-    // sum(temp_matrices[2], temp_matrices[3], temp_matrices[1]);
+    // array[7] = E+F;
+    sum(E, F, temp_matrices7);
 
-    // // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
-    // diff(diff(sum(temp_matrices[4], temp_matrices[0], temp_matrices[3]), temp_matrices[2], temp_matrices[8]), temp_matrices[6], temp_matrices[3]);
+    // array[6] = strassen(array[6], array[7]); // P7
+    temp_matrices6 = strassen(temp_matrices6, temp_matrices7, dimension/2, crossover_dimension);
 
-    // printf("COMBINE\n");
+    matrix temp_matrices8 = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = initialize_matrix(dimension/2)};
 
-    // // combine matrices
-    // matrix M = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, intialize_matrix(dimension)};
-    // for (int i = 0; i < dimension; ++i) {
-    // 	for (int j = 0; j < dimension; ++j) {
-    // 		if (i < dimension/2 && j < dimension/2) {
-    // 			M.mat[i][j] = temp_matrices[7].mat[i][j];  			
-    // 		}
-    // 		else if (i < dimension/2 && j >= dimension/2) {
-    // 			M.mat[i][j] = temp_matrices[5].mat[i][j % (dimension/2)];
-    // 		}
-    // 		else if (i >= dimension/2 && j < dimension/2) {
-    // 			M.mat[i][j] = temp_matrices[1].mat[i % (dimension/2)][j];
-    // 		}
-    // 		else {
-    // 			M.mat[i][j] = temp_matrices[3].mat[i % (dimension/2)][j % (dimension/2)];
-    // 		}
-    // 	}
-    // }
+    // array[7] = array[4] + array[3] - array[1] + array[5]; // AE + BG
+    sum(diff(sum(temp_matrices4, temp_matrices3, temp_matrices7), temp_matrices1, temp_matrices8), temp_matrices5, temp_matrices7);
 
-    // printf("DONE COMBINING\n");
+    // array[5] = array[0] + array[1]; // AF + BH
+    sum(temp_matrices0, temp_matrices1, temp_matrices5);
 
-    return M1;
+    // array[1] = array[2] + array[3]; // CE + DG
+    sum(temp_matrices2, temp_matrices3, temp_matrices1);
+
+    // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
+    diff(diff(sum(temp_matrices4, temp_matrices0, temp_matrices3), temp_matrices2, temp_matrices8), temp_matrices6, temp_matrices3);
+
+    printf("COMBINE\n");
+
+    // combine matrices
+    matrix M = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, .mat = initialize_matrix(dimension)};
+    for (int i = 0; i < dimension; ++i) {
+    	for (int j = 0; j < dimension; ++j) {
+    		if (i < dimension/2 && j < dimension/2) {
+    			M.mat[i][j] = temp_matrices7.mat[i][j];  			
+    		}
+    		else if (i < dimension/2 && j >= dimension/2) {
+    			M.mat[i][j] = temp_matrices5.mat[i][j % (dimension/2)];
+    		}
+    		else if (i >= dimension/2 && j < dimension/2) {
+    			M.mat[i][j] = temp_matrices1.mat[i % (dimension/2)][j];
+    		}
+    		else {
+    			M.mat[i][j] = temp_matrices3.mat[i % (dimension/2)][j % (dimension/2)];
+    		}
+    	}
+    }
+
+    printf("DONE COMBINING\n");
+
+    return M;
 }
 
 int main(int argc, char *argv[]) {
@@ -287,7 +293,7 @@ int main(int argc, char *argv[]) {
         crossover_dimension++;
     }
 
-    matrix C = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, intialize_matrix(dimension)};
+    matrix C = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, initialize_matrix(dimension)};
     
     standard_multiplication(A, B, &C);
     printf("STANDARD MULT\n");
