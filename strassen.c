@@ -117,11 +117,14 @@ void standard_multiplication(matrix A, matrix B, matrix* C) {
 
 matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension < crossover_dimension) {
+    	printf("ENTER STANDARD\n");
     	matrix temp_matrix = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, intialize_matrix(dimension)};
         standard_multiplication(M1, M2, &temp_matrix);
+        printf("LEAVING STANDARD\n");
         return temp_matrix;
     }
 
+    printf("ENTER CREATE SUBS\n");
     matrix A = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = M1.mat};
     matrix B = {.fr = 0, .lr = dimension/2, .fc = dimension/2, .lc = dimension, .mat = M1.mat};
     matrix C = {.fr = dimension/2, .lr = dimension, .fc = 0, .lc = dimension/2, .mat = M1.mat};
@@ -130,6 +133,7 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     matrix F = {.fr = 0, .lr = dimension/2, .fc = dimension/2, .lc = dimension, .mat = M2.mat};
     matrix G = {.fr = dimension/2, .lr = dimension, .fc = 0, .lc = dimension/2, .mat = M2.mat};
     matrix H = {.fr = dimension/2, .lr = dimension, .fc = dimension/2, .lc = dimension, .mat = M2.mat};
+    printf("LEAVE CREATE SUBS\n");
 
     matrix temp_matrices[9];
     for (int i = 0; i < 9; i++) {
@@ -203,6 +207,7 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
     diff(diff(sum(temp_matrices[4], temp_matrices[0], temp_matrices[3]), temp_matrices[2], temp_matrices[8]), temp_matrices[6], temp_matrices[3]);
 
+    printf("ENTER COMBINE\n");
     // combine matrices
     M1.fr = 0;
     M1.lr = dimension;
@@ -224,6 +229,7 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     		}
     	}
     }
+    printf("LEAVE COMBINE\n");
 
     return M1;
 }
@@ -237,7 +243,7 @@ int main(int argc, char *argv[]) {
     matrix A = construct_matrix(dimension, fp);
     matrix B = construct_matrix(dimension, fp);
 
-    print_matrix(A);
+    // print_matrix(A);
 
     // times the calculation for all possible crossover points
     time_t t;
@@ -246,8 +252,11 @@ int main(int argc, char *argv[]) {
     int best_time = 10E6;
     int total_time;
     while (crossover_dimension < dimension) {
+        printf("ENTERING CLOCK\n");
         clock_t start = clock();
+        printf("ENTERING STRASSEN\n");
         matrix product_matrix = strassen(A, B, dimension, crossover_dimension);
+        printf("LEAVING STRASSEN\n");
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
 
         if (crossover_dimension == 1) {
