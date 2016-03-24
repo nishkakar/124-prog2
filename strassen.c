@@ -202,7 +202,29 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
     diff(diff(sum(temp_matrices[4], temp_matrices[0], temp_matrices[3]), temp_matrices[2], temp_matrices[8]), temp_matrices[6], temp_matrices[3]);
 
-    return A;
+    // combine matrices
+    M1.fr = 0;
+    M1.lr = dimension;
+    M1.fc = 0;
+    M1.lc = dimension;
+    for (int i = 0; i < dimension; ++i) {
+    	for (int j = 0; j < dimension; ++j) {
+    		if (i < dimension/2 && j < dimension/2) {
+    			M1.mat[i][j] = temp_matrices[7].mat[i][j];  			
+    		}
+    		else if (i >= dimension/2 && j < dimension/2) {
+    			M1.mat[i][j] = temp_matrices[5].mat[i % dimension/2][j];
+    		}
+    		else if (i < dimension/2 && j >= dimension/2) {
+    			M1.mat[i][j] = temp_matrices[1].mat[i][j % dimension/2];
+    		}
+    		else {
+    			M1.mat[i][j] = temp_matrices[3].mat[i % dimension/2][j % dimension/2];
+    		}
+    	}
+    }
+
+    return M1;
 
 }
 
