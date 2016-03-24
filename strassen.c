@@ -117,7 +117,9 @@ void standard_multiplication(matrix A, matrix B, matrix* C) {
 
 matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension < crossover_dimension) {
-        // return standard_multiplication(matrix_A, matrix_B);
+    	matrix temp_matrix = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, intialize_matrix(dimension)};
+        standard_multiplication(M1, M2, &temp_matrix);
+        return temp_matrix;
     }
 
     matrix A = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = M1.mat};
@@ -128,7 +130,6 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     matrix F = {.fr = 0, .lr = dimension/2, .fc = dimension/2, .lc = dimension, .mat = M2.mat};
     matrix G = {.fr = dimension/2, .lr = dimension, .fc = 0, .lc = dimension/2, .mat = M2.mat};
     matrix H = {.fr = dimension/2, .lr = dimension, .fc = dimension/2, .lc = dimension, .mat = M2.mat};
-
 
     matrix temp_matrices[9];
     for (int i = 0; i < 9; i++) {
@@ -225,7 +226,6 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     }
 
     return M1;
-
 }
 
 int main(int argc, char *argv[]) {
