@@ -68,12 +68,17 @@ void print_matrix(matrix M) {
 }
 
 matrix sum(matrix A, matrix B, matrix C) {
+    printf("entered sum\n");
     int a_i, b_i;
     int a_j, b_j;
     int i, j;
+    printf("initialized variables\n");  
 
     for (a_i = A.fr, b_i = B.fr, i = 0; a_i < A.lr; a_i++, b_i ++, i++) {
+        printf("entered first for loop\n");
         for (a_j = A.fc, b_j = B.fc, j = 0; a_j < A.lc; a_j++, b_j++, j++) {
+            printf("entered second for loop\n");
+            printf("i=%d, j=%d\n", i, j);
             C.mat[i][j] = A.mat[a_i][a_j] + B.mat[b_i][b_j];
         }
     }
@@ -215,30 +220,27 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     printf("COMBINE\n");
 
     // combine matrices
-    M1.fr = 0;
-    M1.lr = dimension;
-    M1.fc = 0;
-    M1.lc = dimension;
+    matrix M = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, intialize_matrix(dimension)};
     for (int i = 0; i < dimension; ++i) {
     	for (int j = 0; j < dimension; ++j) {
     		if (i < dimension/2 && j < dimension/2) {
-    			M1.mat[i][j] = temp_matrices[7].mat[i][j];  			
+    			M.mat[i][j] = temp_matrices[7].mat[i][j];  			
     		}
     		else if (i < dimension/2 && j >= dimension/2) {
-    			M1.mat[i][j] = temp_matrices[5].mat[i][j % (dimension/2)];
+    			M.mat[i][j] = temp_matrices[5].mat[i][j % (dimension/2)];
     		}
     		else if (i >= dimension/2 && j < dimension/2) {
-    			M1.mat[i][j] = temp_matrices[1].mat[i % (dimension/2)][j];
+    			M.mat[i][j] = temp_matrices[1].mat[i % (dimension/2)][j];
     		}
     		else {
-    			M1.mat[i][j] = temp_matrices[3].mat[i % (dimension/2)][j % (dimension/2)];
+    			M.mat[i][j] = temp_matrices[3].mat[i % (dimension/2)][j % (dimension/2)];
     		}
     	}
     }
 
     printf("DONE COMBINING\n");
 
-    return M1;
+    return M;
 }
 
 int main(int argc, char *argv[]) {
@@ -273,16 +275,9 @@ int main(int argc, char *argv[]) {
             best_time = total_time;
         }
         crossover_dimension++;
-        
-        // reset A
-        fseek(fp, 0, SEEK_SET);
-        A = construct_matrix(dimension, fp);
     }
 
-    // standard mult
-    fseek(fp, 0, SEEK_SET);
-    A = construct_matrix(dimension, fp);
-    matrix C = construct_matrix(dimension, fp);
+    matrix C = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, intialize_matrix(dimension)};
     
     standard_multiplication(A, B, &C);
     printf("STANDARD MULT\n");
