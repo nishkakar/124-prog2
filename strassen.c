@@ -68,15 +68,11 @@ void print_matrix(matrix M) {
 }
 
 matrix sum(matrix A, matrix B, matrix C) {
-    printf("entered sum\n");
-    int a_i, b_i;
-    int a_j, b_j;
-    int i, j;
-    printf("initialized variables\n");  
+    printf("entered sum\n"); 
 
-    for (a_i = A.fr, b_i = B.fr, i = 0; a_i < A.lr; a_i++, b_i ++, i++) {
+    for (int a_i = A.fr, b_i = B.fr, i = 0; a_i < A.lr; a_i++, b_i ++, i++) {
         printf("entered first for loop\n");
-        for (a_j = A.fc, b_j = B.fc, j = 0; a_j < A.lc; a_j++, b_j++, j++) {
+        for (int a_j = A.fc, b_j = B.fc, j = 0; a_j < A.lc; a_j++, b_j++, j++) {
             printf("entered second for loop\n");
             printf("i=%d, j=%d\n", i, j);
             C.mat[i][j] = A.mat[a_i][a_j] + B.mat[b_i][b_j];
@@ -87,13 +83,11 @@ matrix sum(matrix A, matrix B, matrix C) {
 }
 
 matrix diff(matrix A, matrix B, matrix C) {
-    int a_i, b_i;
-    int a_j, b_j;
-    int i, j;
-
-    for (a_i = A.fr, b_i = B.fr, i = 0; a_i < A.lr; a_i++, b_i ++, i++) {
-        for (a_j = A.fc, b_j = B.fc, j = 0; a_j < A.lc; a_j++, b_j++, j++) {
+    for (int a_i = A.fr, b_i = B.fr, i = 0; a_i < A.lr; a_i++, b_i++, i++) {
+        for (int a_j = A.fc, b_j = B.fc, j = 0; a_j < A.lc; a_j++, b_j++, j++) {
+            printf("entering %d %d\n", A.mat[a_i][a_j], B.mat[b_i][b_j]);
             C.mat[i][j] = A.mat[a_i][a_j] - B.mat[b_i][b_j];
+            printf("exiting\n");
         }
     }
 
@@ -150,7 +144,9 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     printf("INITIALIZED\n");
 
     // array[0] = F-H; // diff(F, H, array[0])
+    printf("===================%p\n", temp_matrices[1].mat[0]);
     diff(F, H, temp_matrices[0]);
+    printf("===================%p\n", temp_matrices[1].mat[0]);
 
     // array[0] = strassen(A, array[0]); // P1
     temp_matrices[0] = strassen(A, temp_matrices[0], dimension/2, crossover_dimension);
