@@ -57,22 +57,32 @@ void print_matrix(matrix M) {
     }
 }
 
-// int add(int** matrix_A, int** matrix_B, int dimension) {
-//     int sum_matrix[dimension][dimension];
-//     for (int i = 0; i < dimension; i++) {
-//         for (int j = 0; j < dimension; j++) {
-//             sum_matrix[i][j] = matrix_A[i][j] + matrix_B[i][j];
-//         }
-//     }
-//     return sum_matrix;
-// }
+matrix sum(matrix A, matrix B, int dimension) {
+    int sum_matrix[dimension][dimension];
+    for (int i = 0; i < dimension; i++) {
+        for (int j = 0; j < dimension; j++) {
+            sum_matrix[i][j] = matrix_A[i][j] + matrix_B[i][j];
+        }
+    }
+    return sum_matrix;
+}
 
-matrix strassen(matrix A, matrix B, int dimension, int crossover_dimension) {
+matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension < crossover_dimension) {
         // return standard_multiplication(matrix_A, matrix_B);
     }
 
-    int** array[9];
+    matrix A = {fr = 0, lr = dimension/2, fc = 0, lc = dimension/2, mat = M1.mat};
+    matrix B = {fr = 0, lr = dimension/2, fc = dimension/2, lc = dimension, mat = M1.mat};
+    matrix C = {fr = dimension/2, lr = dimension, fc = 0, lc = dimension/2, mat = M1.mat};
+    matrix D = {fr = dimension/2, lr = dimension, fc = dimension/2, lc = dimension, mat = M1.mat};
+    matrix E = {fr = 0, lr = dimension/2, fc = 0, lc = dimension/2, mat = M2.mat};
+    matrix F = {fr = 0, lr = dimension/2, fc = dimension/2, lc = dimension, mat = M2.mat};
+    matrix G = {fr = dimension/2, lr = dimension, fc = 0, lc = dimension/2, mat = M2.mat};
+    matrix H = {fr = dimension/2, lr = dimension, fc = dimension/2, lc = dimension, mat = M2.mat};
+
+
+    matrix temp_matrices[9];
     // array[0] = F-H; // diff(F, H, array[0])
     // array[0] = strassen(A, array[0]); // P1
     // array[1] = A+B;
