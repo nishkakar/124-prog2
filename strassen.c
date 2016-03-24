@@ -155,7 +155,6 @@ matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension, ma
     diff(F, H, temp_matrices[0]);
     printf("IT WORKS! %d\n", temp_matrices[1].mat[0][0]);
 
-
     // array[0] = strassen(A, array[0]); // P1
     // printf("%d\n", temp_matrices[1].mat[0][0]);
     strassen(A, temp_matrices[0], dimension/2, crossover_dimension, temp_matrices[0]);
