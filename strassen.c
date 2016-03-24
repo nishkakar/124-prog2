@@ -111,6 +111,7 @@ void standard_multiplication(matrix A, matrix B, matrix* C) {
 			}
 
 			C->mat[i][j] = sum;
+			sum = 0;
 		}
 	}
 }
@@ -239,11 +240,11 @@ int main(int argc, char *argv[]) {
 
     // times the calculation for all possible crossover points
     time_t t;
-    int crossover_dimension = 1;
+    int crossover_dimension = 2;
     int optimal_dimension = -1;
     int best_time = 10E6;
     int total_time;
-    while (crossover_dimension < dimension) {
+    while (crossover_dimension <= dimension) {
         clock_t start = clock();
         matrix product_matrix = strassen(A, B, dimension, crossover_dimension);
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
