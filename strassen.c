@@ -25,17 +25,19 @@ typedef struct matrix {
 
 matrix construct_matrix(int dimension, FILE* fp) {
     matrix m; 
-    int** matrix = malloc(dimension * sizeof(int*));
+    int** matrix = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
+
+    int* pos = (int*) (matrix + dimension);
+    for (int i = 0; i < dimension; ++i) {
+        matrix[i] = pos + i * dimension;
+    }
 
     char buf[256];
     for (int i = 0; i < dimension; i++) {
-        matrix[i] = malloc(dimension * sizeof(int));
         for (int j = 0; j < dimension; j++) {
             fgets(buf, sizeof(buf), fp);
             matrix[i][j] = atoi(buf);
-            // printf("%d ", matrix[i][j]);
         }
-        // printf("\n");
     }
 
     m.fr = 0;
@@ -49,37 +51,37 @@ matrix construct_matrix(int dimension, FILE* fp) {
 
 void print_matrix(matrix M) {
     // prints out adjacency matrix
-    for (int i = fr; i < lr; ++i) {
-        for (int j = fc; j < lc; ++j) {
-            printf("%d ", matrix[i][j]);
+    for (int i = M.fr; i < M.lr; ++i) {
+        for (int j = M.fc; j < M.lc; ++j) {
+            printf("%d ", M.mat[i][j]);
         }
         printf("\n");
     }
 }
 
-matrix sum(matrix A, matrix B, int dimension) {
-    int sum_matrix[dimension][dimension];
-    for (int i = 0; i < dimension; i++) {
-        for (int j = 0; j < dimension; j++) {
-            sum_matrix[i][j] = matrix_A[i][j] + matrix_B[i][j];
-        }
-    }
-    return sum_matrix;
-}
+// matrix sum(matrix A, matrix B, int dimension) {
+//     int sum_matrix[dimension][dimension];
+//     for (int i = 0; i < dimension; i++) {
+//         for (int j = 0; j < dimension; j++) {
+//             sum_matrix[i][j] = matrix_A[i][j] + matrix_B[i][j];
+//         }
+//     }
+//     return sum_matrix;
+// }
 
 matrix strassen(matrix M1, matrix M2, int dimension, int crossover_dimension) {
     if (dimension < crossover_dimension) {
         // return standard_multiplication(matrix_A, matrix_B);
     }
 
-    matrix A = {fr = 0, lr = dimension/2, fc = 0, lc = dimension/2, mat = M1.mat};
-    matrix B = {fr = 0, lr = dimension/2, fc = dimension/2, lc = dimension, mat = M1.mat};
-    matrix C = {fr = dimension/2, lr = dimension, fc = 0, lc = dimension/2, mat = M1.mat};
-    matrix D = {fr = dimension/2, lr = dimension, fc = dimension/2, lc = dimension, mat = M1.mat};
-    matrix E = {fr = 0, lr = dimension/2, fc = 0, lc = dimension/2, mat = M2.mat};
-    matrix F = {fr = 0, lr = dimension/2, fc = dimension/2, lc = dimension, mat = M2.mat};
-    matrix G = {fr = dimension/2, lr = dimension, fc = 0, lc = dimension/2, mat = M2.mat};
-    matrix H = {fr = dimension/2, lr = dimension, fc = dimension/2, lc = dimension, mat = M2.mat};
+    matrix A = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = M1.mat};
+    matrix B = {.fr = 0, .lr = dimension/2, .fc = dimension/2, .lc = dimension, .mat = M1.mat};
+    matrix C = {.fr = dimension/2, .lr = dimension, .fc = 0, .lc = dimension/2, .mat = M1.mat};
+    matrix D = {.fr = dimension/2, .lr = dimension, .fc = dimension/2, .lc = dimension, .mat = M1.mat};
+    matrix E = {.fr = 0, .lr = dimension/2, .fc = 0, .lc = dimension/2, .mat = M2.mat};
+    matrix F = {.fr = 0, .lr = dimension/2, .fc = dimension/2, .lc = dimension, .mat = M2.mat};
+    matrix G = {.fr = dimension/2, .lr = dimension, .fc = 0, .lc = dimension/2, .mat = M2.mat};
+    matrix H = {.fr = dimension/2, .lr = dimension, .fc = dimension/2, .lc = dimension, .mat = M2.mat};
 
 
     matrix temp_matrices[9];
@@ -117,7 +119,7 @@ int main(int argc, char *argv[]) {
     matrix A = construct_matrix(dimension, fp);
     matrix B = construct_matrix(dimension, fp);
 
-    print_graph(A.mat, dimension);
+    print_matrix(A);
 
     // times the calculation for all possible crossover points
     time_t t;
@@ -131,7 +133,7 @@ int main(int argc, char *argv[]) {
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
 
         if (crossover_dimension == 1) {
-            print_graph(product_matrix.mat, dimension);
+            print_matrix(product_matrix);
         }
 
         // if this was a faster calculation, update our records
