@@ -47,10 +47,10 @@ matrix construct_matrix(int dimension, FILE* fp) {
     return m;
 }
 
-void print_graph(int** matrix, int dimension) {
+void print_matrix(matrix M) {
     // prints out adjacency matrix
-    for (int i = 0; i < dimension; ++i) {
-        for (int j = 0; j < dimension; ++j) {
+    for (int i = fr; i < lr; ++i) {
+        for (int j = fc; j < lc; ++j) {
             printf("%d ", matrix[i][j]);
         }
         printf("\n");
