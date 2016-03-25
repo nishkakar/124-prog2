@@ -112,9 +112,9 @@ void standard_multiplication(matrix* A, matrix* B, matrix* C) {
     for (int i = 0, Ai = A->fr; i < dim; ++i, ++Ai) {
         for (int j = 0, Bj = B->fc; j < dim; ++j, ++Bj) {
             for (int Ak = A->fc, Bk = B->fr; Ak < A->lc; ++Ak, ++Bk) {
-                printf("MULT %d %d\n", A->mat[Ai][Ak], B->mat[Bk][Bj]);
-                printf("INDICES A %d %d INDICES B %d %d\n", Ai, Ak, Bk, Bj);
-                print_matrix(A);
+                // printf("MULT %d %d\n", A->mat[Ai][Ak], B->mat[Bk][Bj]);
+                // printf("INDICES A %d %d INDICES B %d %d\n", Ai, Ak, Bk, Bj);
+                // print_matrix(A);
                 sum += A->mat[Ai][Ak] * B->mat[Bk][Bj];
             }
 
@@ -134,10 +134,10 @@ void set_matrix(matrix* M, int fr, int lr, int fc, int lc, int** mat) {
 
 void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossover_dimension) {
     if (dimension <= crossover_dimension) {
-        printf("STANDARD\n");
+        // printf("STANDARD\n");
         matrix temp_matrix = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, .mat = initialize_matrix(dimension)};
         standard_multiplication(M1, M2, &temp_matrix);
-        return temp_matrix;
+        return;
     }
 
     // base case
@@ -243,25 +243,27 @@ int main(int argc, char* argv[]) {
     time_t t;
     int crossover_dimension = 2;
     int optimal_dimension = -1;
-    int best_time = 10E6;
-    int total_time;
+    float best_time = 10E6;
+    float total_time;
     while (crossover_dimension <= dimension) {
         matrix result;
         set_matrix(&result, 0, dimension, 0, dimension, initialize_matrix(dimension));
         clock_t start = clock();
         strassen(&A, &B, &result, dimension, crossover_dimension);
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
-        printf("PRODUCT CROSSOVER %d\n", crossover_dimension);
-        print_matrix(&result);
+        printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
+        // print_matrix(&result);
         printf("\n");
 
         // if this was a faster calculation, update our records
-        if (total_time < best_time) {
+        if (total_time <= best_time) {
             optimal_dimension = crossover_dimension;
             best_time = total_time;
         }
-        crossover_dimension++;
+        crossover_dimension+= 4;
     }
+
+    printf("OPTIMAL DIMENSION: %d\n", optimal_dimension);
 
     // standard_multiplication(&A, &B, &result);
 
