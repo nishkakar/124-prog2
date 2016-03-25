@@ -284,7 +284,7 @@ int main(int argc, char* argv[]) {
     matrix A = construct_matrix(dimension, true_dimension, fp);
     matrix B = construct_matrix(dimension, true_dimension, fp);
 
-    int crossover_dimension = ceil(true_dimension/2);
+    int crossover_dimension = true_dimension/2;
     matrix result;
     set_matrix(&result, 0, true_dimension, 0, true_dimension, initialize_matrix(true_dimension));
     strassen(&A, &B, &result, true_dimension, crossover_dimension);
@@ -322,7 +322,6 @@ int main(int argc, char* argv[]) {
     // }
     // printf("OPTIMAL DIMENSION: %d\n", optimal_dimension);
 
-    
     free_matrix(A.mat, true_dimension);
     free_matrix(B.mat, true_dimension);
 
