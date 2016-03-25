@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 // #include <string.h>
 
 // for seeking
@@ -30,54 +31,48 @@ int** initialize_matrix(int dimension) {
     return mat;
 }
 
-matrix construct_matrix(int dimension, FILE* fp) {
+int isPowerOfTwo(int n){
+    if (n == 0) 
+        return 0;
+    while (n != 1) {
+        if (n % 2 != 0)
+            return 0;
+        n = n/2;
+    }
+    return 1;
+}
+
+
+matrix construct_matrix(int dimension, int true_dimension, FILE* fp) {
     matrix m; 
-    int** matrix = initialize_matrix(dimension); // malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
+    
+    int** matrix = initialize_matrix(true_dimension); // malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
 
     // int* pos = (int*) (matrix + dimension);
     // for (int i = 0; i < dimension; ++i) {
     //     matrix[i] = pos + i * dimension;
     // }
+    
+
+    printf("TRUE DIMENSION: %d\n", true_dimension);
 
     char buf[256];
-    for (int i = 0; i < dimension; i++) {
-        for (int j = 0; j < dimension; j++) {
+    for (int i = 0; i < true_dimension; i++) {
+        for (int j = 0; j < true_dimension; j++) {
+
+            if (i >= dimension || j >= dimension) {
+                matrix[i][j] = 0;
+                continue;
+            }
             fgets(buf, sizeof(buf), fp);
             matrix[i][j] = atoi(buf);
          }
     }
 
     m.fr = 0;
-    m.lr = dimension;
+    m.lr = true_dimension;
     m.fc = 0;
-    m.lc = dimension;
-    m.mat = matrix;
-
-    return m;
-}
-
-matrix construct_matrix2(int dimension, FILE* fp) {
-    matrix m;
-    dimension = 2 * dimension;
-    int** matrix = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
-
-    int* pos = (int*) (matrix + dimension);
-    for (int i = 0; i < dimension; ++i) {
-        matrix[i] = pos + i * dimension;
-    }
-
-    char buf[256];
-    for (int i = dimension/2; i < dimension; i++) {
-        for (int j = dimension; j < dimension; j++) {
-            fgets(buf, sizeof(buf), fp);
-            matrix[i][j] = atoi(buf);
-         }
-    }
-
-    m.fr = 0;
-    m.lr = dimension;
-    m.fc = 0;
-    m.lc = dimension;
+    m.lc = true_dimension;
     m.mat = matrix;
 
     return m;
@@ -104,9 +99,9 @@ void print_matrix(matrix* M) {
     }
 }
 
-void print_diagonals(matrix* M) {
+void print_diagonals(matrix* M, int dimension) {
     // prints out diagonals
-    for (int i = M->fr; i < M->lr; ++i) {
+    for (int i = M->fr; i < M->fr + dimension; ++i) {
         printf("%d\n", M->mat[i][i]);
     }
 }
@@ -258,8 +253,16 @@ int main(int argc, char* argv[]) {
 
     FILE* fp;
     fp = fopen(inputfile, "r");
-    matrix A = construct_matrix(dimension, fp);
-    matrix B = construct_matrix(dimension, fp);
+
+    int true_dimension = dimension;
+    if (!isPowerOfTwo(dimension)) {
+        true_dimension = (int) pow(2.0, (double) floor(log(dimension)/log(2)) + 1);
+    }
+    matrix A = construct_matrix(dimension, true_dimension, fp);
+    matrix B = construct_matrix(dimension, true_dimension, fp);
+
+    print_matrix(&A);
+    print_matrix(&B);
 
     // times the calculation for all possible crossover points
     time_t t;
@@ -267,15 +270,15 @@ int main(int argc, char* argv[]) {
     int optimal_dimension = -1;
     float best_time = 10E6;
     float total_time;
-    while (crossover_dimension <= dimension) {
+    while (crossover_dimension <= true_dimension) {
         matrix result;
-        int** temp = initialize_matrix(dimension);
-        set_matrix(&result, 0, dimension, 0, dimension, temp);
+        int** temp = initialize_matrix(true_dimension);
+        set_matrix(&result, 0, true_dimension, 0, true_dimension, temp);
         clock_t start = clock();
-        strassen(&A, &B, &result, dimension, crossover_dimension);
+        strassen(&A, &B, &result, true_dimension, crossover_dimension);
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
         printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
-        print_diagonals(&result);
+        print_diagonals(&result, dimension);
         free(temp);
         printf("\n");
 
@@ -291,6 +294,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
-// every other recurisive strassen call fails, only works for P1 - P7; dig in to the recursive calls for the even ones and see where it fucks up
-// standard multiplication - fr,fc element in A was being overwritten (to -640 from -8)
