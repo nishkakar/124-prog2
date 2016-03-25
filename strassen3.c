@@ -20,28 +20,28 @@ typedef struct matrix {
     int** mat;
 } matrix; 
 
-matrix* construct_matrix(int dimension, FILE* fp) {
-    matrix* m; 
-    int** mat = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
+matrix construct_matrix(int dimension, FILE* fp) {
+    matrix m; 
+    int** matrix = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
 
-    int* pos = (int*) (mat + dimension);
+    int* pos = (int*) (matrix + dimension);
     for (int i = 0; i < dimension; ++i) {
-        mat[i] = pos + i * dimension;
+        matrix[i] = pos + i * dimension;
     }
 
     char buf[256];
     for (int i = 0; i < dimension; i++) {
         for (int j = 0; j < dimension; j++) {
             fgets(buf, sizeof(buf), fp);
-            mat[i][j] = atoi(buf);
+            matrix[i][j] = atoi(buf);
          }
     }
 
-    m->fr = 0;
-    m->lr = dimension;
-    m->fc = 0;
-    m->lc = dimension;
-    m->mat = mat;
+    m.fr = 0;
+    m.lr = dimension;
+    m.fc = 0;
+    m.lc = dimension;
+    m.mat = matrix;
 
     return m;
 }
@@ -285,15 +285,15 @@ int main(int argc, char* argv[]) {
 
     FILE* fp;
     fp = fopen(inputfile, "r");
-    matrix* A = construct_matrix(dimension, fp);
-    matrix* B = construct_matrix(dimension, fp);
+    matrix A = construct_matrix(dimension, fp);
+    matrix B = construct_matrix(dimension, fp);
     matrix result;
     set_matrix(&result, 0, dimension, 0, dimension, initialize_matrix(dimension));
 
-    strassen(A, B, &result, dimension);
+    strassen(&A, &B, &result, dimension);
 
-    print_matrix(A);
-    print_matrix(B);
+    print_matrix(&A);
+    print_matrix(&B);
     print_matrix(&result);
 
     return 0;
