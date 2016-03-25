@@ -24,7 +24,7 @@ matrix* construct_matrix(int dimension, FILE* fp) {
     matrix* m; 
     int** mat = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
 
-    int* pos = (int*) (mat + dimension * sizeof(int));
+    int* pos = (int*) (mat + dimension);
     for (int i = 0; i < dimension; ++i) {
         mat[i] = pos + i * dimension;
     }
@@ -46,12 +46,22 @@ matrix* construct_matrix(int dimension, FILE* fp) {
     return m;
 }
 
-int** initialize_matrix(int dimension) {
-    int** mat = malloc(dimension * sizeof(int) + dimension * dimension * sizeof(int));
+// int** initialize_matrix(int dimension) {
+//     int** mat = malloc(dimension * sizeof(int) + dimension * dimension * sizeof(int));
 
-    int* pos = (int*) (mat + dimension * sizeof(int));
+//     int* pos = (int*) (mat + dimension * sizeof(int));
+//     for (int i = 0; i < dimension; i++) {
+//         mat[i] = pos + i * dimension;
+//     }
+
+//     return mat;
+// }
+
+int** initialize_matrix(int dimension) {
+    int** mat = malloc(dimension * sizeof(int*));
+
     for (int i = 0; i < dimension; i++) {
-        mat[i] = pos + i * dimension;
+        mat[i] = malloc(dimension * sizeof(int));
     }
 
     return mat;
@@ -68,34 +78,29 @@ void print_matrix(matrix* M) {
 }
 
 void sum(matrix* A, matrix* B, matrix* C) {
-    printf("%p %p %p\n", A->mat[0], B->mat[0], C->mat[0]);
-
     int dim = A->lr - A->fr;
-    C->fr = C->fc = 0;
-    C->lr = C->lc = dim;
-
-    printf("%p %p %p\n", A->mat[0], B->mat[0], C->mat[0]);
 
     for (int Ai = A->fr, Bi = B->fr, i = 0; i < dim; ++Ai, ++Bi, ++i) {
         for (int Aj = A->fc, Bj = B->fc, j = 0; j < dim; ++Aj, ++Bj, ++j) {
-            printf("%p %p %p\n", A->mat[0], B->mat[0], C->mat[0]);
             C->mat[i][j] = A->mat[Ai][Aj] + B->mat[Bi][Bj];
         }
     }
 
-    printf("%p %p %p\n", A->mat[0], B->mat[0], C->mat[0]);
+    C->fr = C->fc = 0;
+    C->lr = C->lc = dim;
 }
 
 void diff(matrix* A, matrix* B, matrix* C) {
     int dim = A->lr - A->fr;
-    C->fr = C->fc = 0;
-    C->lr = C->lc = dim;
 
     for (int Ai = A->fr, Bi = B->fr, i = 0; i < dim; ++Ai, ++Bi, ++i) {
         for (int Aj = A->fc, Bj = B->fc, j = 0; j < dim; ++Aj, ++Bj, ++j) {
             C->mat[i][j] = A->mat[Ai][Aj] - B->mat[Bi][Bj];
         }
     }
+
+    C->fr = C->fc = 0;
+    C->lr = C->lc = dim;
 }
 
 void standard_multiplication(matrix* A, matrix* B, matrix* C) {
@@ -146,8 +151,6 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
         return;
     }
 
-    printf("SETTING\n");
-
     matrix A, B, C, D, E, F, G, H;
     set_matrix(&A, 0, dimension/2, 0, dimension/2, M1->mat);
     set_matrix(&B, 0, dimension/2, dimension/2, dimension, M1->mat);
@@ -158,72 +161,96 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
     set_matrix(&G, dimension/2, dimension, 0, dimension/2, M2->mat);
     set_matrix(&H, dimension/2, dimension, dimension/2, dimension, M2->mat);
 
-    printf("ALL SET\n");
-
     matrix temp_matrices[9];
-    for (int i = 0; i < 9; ++i) {
-        set_matrix(&temp_matrices[i], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
-    }
+    // for (int i = 0; i < 9; ++i) {
+    //     set_matrix(&temp_matrices[i], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+    // }
+
+    set_matrix(&temp_matrices[0], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
 
     // array[0] = F-H; // diff(&F, &H, array[0])
     diff(&F, &H, &temp_matrices[0]);
-    if (dimension == 8)
-        printf("%p\n", &temp_matrices[1]);
     // printf("first diff %d\n", dimension);
     // array[0] = strassen(&A, array[0]); // P1
     strassen(&A, &temp_matrices[0], &temp_matrices[0], dimension/2);
-    if (dimension == 8)
-        printf("%p\n", &temp_matrices[1]);
     printf("exiting strassen 1 %d\n", dimension);
     // array[1] = A+B;
+
+    set_matrix(&temp_matrices[1], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+
     sum(&A, &B, &temp_matrices[1]);
-    printf("entering strassen 2 %d\n", dimension);
     // array[1] = strassen(array[1], H); // P2
     strassen(&temp_matrices[1], &H, &temp_matrices[1], dimension/2);
-    printf("exiting strassen 3 %d\n", dimension);
+    printf("exiting strassen 2 %d\n", dimension);
     // array[2] = C+D;
+    
+    set_matrix(&temp_matrices[2], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+
     sum(&C, &D, &temp_matrices[2]);
     // array[2] = strassen(array[2], E); // P3
     strassen(&temp_matrices[2], &E, &temp_matrices[2], dimension/2);
-    printf("exiting strassen 4 %d\n", dimension);
+    printf("exiting strassen 3 %d\n", dimension);
     // array[3] = G-E;
+    
+    set_matrix(&temp_matrices[3], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+
     diff(&G, &E, &temp_matrices[3]);
     // array[3] = strassen(&D, array[3]); // P4
     strassen(&D, &temp_matrices[3], &temp_matrices[3], dimension/2);
-    printf("exiting strassen 5\n");
+    printf("exiting strassen 4\n");
     // array[4] = A+D;
+    
+    set_matrix(&temp_matrices[4], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+
     sum(&A, &D, &temp_matrices[4]);
     // array[5] = E+H;
+    
+    set_matrix(&temp_matrices[5], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+
     sum(&E, &H, &temp_matrices[5]);
     // array[4] = strassen(array[4], array[5]); // P5
     strassen(&temp_matrices[4], &temp_matrices[5], &temp_matrices[4], dimension/2);
-    printf("exiting strassen 6\n");    
+    printf("exiting strassen 5\n");    
     // array[5] = B-D;
     diff(&B, &D, &temp_matrices[5]);
     // array[6] = G+H;
+    
+    set_matrix(&temp_matrices[6], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+
     sum(&G, &H, &temp_matrices[6]);
     // array[5] = strassen(array[5], array[6]); // P6
     strassen(&temp_matrices[5], &temp_matrices[6], &temp_matrices[5], dimension/2);
-    printf("exiting strassen 7\n");     
+    printf("exiting strassen 6\n");     
     // array[6] = A-C;
     diff(&A, &C, &temp_matrices[6]);
     // array[7] = E+F;
+    set_matrix(&temp_matrices[7], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
+
     sum(&E, &F, &temp_matrices[7]);
     // array[6] = strassen(array[6], array[7]); // P7
     strassen(&temp_matrices[6], &temp_matrices[7], &temp_matrices[6], dimension/2);
-    printf("exiting strassen 8\n");
+    printf("exiting strassen 7\n");
     // array[7] = array[4] + array[3] - array[1] + array[5]; // AE + BG
+    printf("sum1\n");
     sum(&temp_matrices[4], &temp_matrices[3], &temp_matrices[7]);
+    printf("sum2\n");
     diff(&temp_matrices[7], &temp_matrices[1], &temp_matrices[7]);
+    printf("sum3\n");
     sum(&temp_matrices[7], &temp_matrices[5], &temp_matrices[7]);
+    printf("sum4\n");
     // array[5] = array[0] + array[1]; // AF + BH
     sum(&temp_matrices[0], &temp_matrices[1], &temp_matrices[5]);
+    printf("sum5\n");
     // array[1] = array[2] + array[3]; // CE + DG
     sum(&temp_matrices[2], &temp_matrices[3], &temp_matrices[1]);
+    printf("sum6\n");
     // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
     sum(&temp_matrices[4], &temp_matrices[0], &temp_matrices[3]);
+    printf("sum7\n");
     diff(&temp_matrices[3], &temp_matrices[2], &temp_matrices[3]);
+    printf("sum8\n");
     diff(&temp_matrices[3], &temp_matrices[6], &temp_matrices[3]);
+    printf("sum9\n");
 
     printf("combining %d\n", dimension);
 
@@ -231,7 +258,9 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
     for (int i = 0; i < dimension; ++i) {
         for (int j = 0; j < dimension; ++j) {
             if (i < dimension/2 && j < dimension/2) {
-                result->mat[i][j] = temp_matrices[7].mat[i][j];             
+                printf("combining 2 %d\n", temp_matrices[7].mat[i][j]);
+                result->mat[i][j] = temp_matrices[7].mat[i][j];  
+                printf("exit combining 2\n");           
             }
             else if (i < dimension/2 && j >= dimension/2) {
                 result->mat[i][j] = temp_matrices[5].mat[i][j % (dimension/2)];
