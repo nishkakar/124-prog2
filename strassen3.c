@@ -112,6 +112,9 @@ void standard_multiplication(matrix* A, matrix* B, matrix* C) {
     for (int i = 0, Ai = A->fr; i < dim; ++i, ++Ai) {
         for (int j = 0, Bj = B->fc; j < dim; ++j, ++Bj) {
             for (int Ak = A->fc, Bk = B->fr; Ak < A->lc; ++Ak, ++Bk) {
+                printf("MULT %d %d\n", A->mat[Ai][Ak], B->mat[Bk][Bj]);
+                printf("INDICES A %d %d INDICES B %d %d\n", Ai, Ak, Bk, Bj);
+                print_matrix(A);
                 sum += A->mat[Ai][Ak] * B->mat[Bk][Bj];
             }
 
@@ -136,19 +139,6 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
         result->mat[0][0] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc]; 
         return;
     }
-
-    // if (dimension == 2) {
-    //     set_matrix(result, 0, 2, 0, 2, result->mat);
-    //     result->mat[0][0] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc];
-    //     result->mat[0][0] += M1->mat[M1->fr][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc];
-    //     result->mat[0][1] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc + 1];
-    //     result->mat[0][1] += M1->mat[M1->fr][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc + 1];
-    //     result->mat[1][0] = M1->mat[M1->fr + 1][M1->fc] * M2->mat[M2->fr][M2->fc];
-    //     result->mat[1][0] += M1->mat[M1->fr + 1][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc];
-    //     result->mat[1][1] = M1->mat[M1->fr + 1][M1->fc] * M2->mat[M2->fr][M2->fc + 1];
-    //     result->mat[1][1] += M1->mat[M1->fr + 1][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc + 1];
-    //     return;
-    // }
 
     matrix A, B, C, D, E, F, G, H;
     set_matrix(&A, 0, dimension/2, 0, dimension/2, M1->mat);
@@ -245,9 +235,9 @@ int main(int argc, char* argv[]) {
     set_matrix(&result, 0, dimension, 0, dimension, initialize_matrix(dimension));
 
     strassen(&A, &B, &result, dimension);
-
-    print_matrix(&A);
-    print_matrix(&B);
+    // standard_multiplication(&A, &B, &result);
+    // print_matrix(&A);
+    // print_matrix(&B);
     print_matrix(&result);
 
     return 0;
