@@ -47,11 +47,11 @@ matrix* construct_matrix(int dimension, FILE* fp) {
 }
 
 // int** initialize_matrix(int dimension) {
-//     int** mat = malloc(dimension * sizeof(int) + dimension * dimension * sizeof(int));
+//     int** mat = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
 
-//     int* pos = (int*) (mat + dimension * sizeof(int));
-//     for (int i = 0; i < dimension; i++) {
-//         mat[i] = pos + i * dimension;
+//     int* pos = (int*) (mat + dimension);
+//     for (int i = 0; i < dimension * dimension; i += dimension) {
+//         mat[i] = pos + i;
 //     }
 
 //     return mat;
@@ -138,18 +138,18 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
         return;
     }
 
-    if (dimension == 2) {
-        set_matrix(result, 0, 2, 0, 2, result->mat);
-        result->mat[0][0] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc];
-        result->mat[0][0] += M1->mat[M1->fr][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc];
-        result->mat[0][1] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc + 1];
-        result->mat[0][1] += M1->mat[M1->fr][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc + 1];
-        result->mat[1][0] = M1->mat[M1->fr + 1][M1->fc] * M2->mat[M2->fr][M2->fc];
-        result->mat[1][0] += M1->mat[M1->fr + 1][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc];
-        result->mat[1][1] = M1->mat[M1->fr + 1][M1->fc] * M2->mat[M2->fr][M2->fc + 1];
-        result->mat[1][1] += M1->mat[M1->fr + 1][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc + 1];
-        return;
-    }
+    // if (dimension == 2) {
+    //     set_matrix(result, 0, 2, 0, 2, result->mat);
+    //     result->mat[0][0] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc];
+    //     result->mat[0][0] += M1->mat[M1->fr][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc];
+    //     result->mat[0][1] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc + 1];
+    //     result->mat[0][1] += M1->mat[M1->fr][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc + 1];
+    //     result->mat[1][0] = M1->mat[M1->fr + 1][M1->fc] * M2->mat[M2->fr][M2->fc];
+    //     result->mat[1][0] += M1->mat[M1->fr + 1][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc];
+    //     result->mat[1][1] = M1->mat[M1->fr + 1][M1->fc] * M2->mat[M2->fr][M2->fc + 1];
+    //     result->mat[1][1] += M1->mat[M1->fr + 1][M1->fc + 1] * M2->mat[M2->fr + 1][M2->fc + 1];
+    //     return;
+    // }
 
     matrix A, B, C, D, E, F, G, H;
     set_matrix(&A, 0, dimension/2, 0, dimension/2, M1->mat);
