@@ -132,13 +132,20 @@ void set_matrix(matrix* M, int fr, int lr, int fc, int lc, int** mat) {
     M->mat = mat;
 }
 
-void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
-    // base case
-    if (dimension == 1) {
-        set_matrix(result, 0, 1, 0, 1, result->mat);
-        result->mat[0][0] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc]; 
-        return;
+void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossover_dimension) {
+    if (dimension <= crossover_dimension) {
+        printf("STANDARD\n");
+        matrix temp_matrix = {.fr = 0, .lr = dimension, .fc = 0, .lc = dimension, .mat = initialize_matrix(dimension)};
+        standard_multiplication(M1, M2, &temp_matrix);
+        return temp_matrix;
     }
+
+    // base case
+    // if (dimension == 1) {
+    //     set_matrix(result, 0, 1, 0, 1, result->mat);
+    //     result->mat[0][0] = M1->mat[M1->fr][M1->fc] * M2->mat[M2->fr][M2->fc]; 
+    //     return;
+    // }
 
     matrix A, B, C, D, E, F, G, H;
     set_matrix(&A, 0, dimension/2, 0, dimension/2, M1->mat);
@@ -158,37 +165,37 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
     // array[0] = F-H; // diff(&F, &H, array[0])
     diff(&F, &H, &temp_matrices[0]);
     // array[0] = strassen(&A, array[0]); // P1
-    strassen(&A, &temp_matrices[0], &temp_matrices[0], dimension/2);
+    strassen(&A, &temp_matrices[0], &temp_matrices[0], dimension/2, crossover_dimension);
     // array[1] = A+B;
     sum(&A, &B, &temp_matrices[1]);
     // array[1] = strassen(array[1], H); // P2
-    strassen(&temp_matrices[1], &H, &temp_matrices[1], dimension/2);
+    strassen(&temp_matrices[1], &H, &temp_matrices[1], dimension/2, crossover_dimension);
     // array[2] = C+D;   
     sum(&C, &D, &temp_matrices[2]);
     // array[2] = strassen(array[2], E); // P3
-    strassen(&temp_matrices[2], &E, &temp_matrices[2], dimension/2);
+    strassen(&temp_matrices[2], &E, &temp_matrices[2], dimension/2, crossover_dimension);
     // array[3] = G-E;    
     diff(&G, &E, &temp_matrices[3]);
     // array[3] = strassen(&D, array[3]); // P4
-    strassen(&D, &temp_matrices[3], &temp_matrices[3], dimension/2);
+    strassen(&D, &temp_matrices[3], &temp_matrices[3], dimension/2, crossover_dimension);
     // array[4] = A+D;   
     sum(&A, &D, &temp_matrices[4]);
     // array[5] = E+H;    
     sum(&E, &H, &temp_matrices[5]);
     // array[4] = strassen(array[4], array[5]); // P5
-    strassen(&temp_matrices[4], &temp_matrices[5], &temp_matrices[4], dimension/2);
+    strassen(&temp_matrices[4], &temp_matrices[5], &temp_matrices[4], dimension/2, crossover_dimension);
     // array[5] = B-D;
     diff(&B, &D, &temp_matrices[5]);
     // array[6] = G+H;
     sum(&G, &H, &temp_matrices[6]);
     // array[5] = strassen(array[5], array[6]); // P6
-    strassen(&temp_matrices[5], &temp_matrices[6], &temp_matrices[5], dimension/2);
+    strassen(&temp_matrices[5], &temp_matrices[6], &temp_matrices[5], dimension/2, crossover_dimension);
     // array[6] = A-C;
     diff(&A, &C, &temp_matrices[6]);
     // array[7] = E+F;
     sum(&E, &F, &temp_matrices[7]);
     // array[6] = strassen(array[6], array[7]); // P7
-    strassen(&temp_matrices[6], &temp_matrices[7], &temp_matrices[6], dimension/2);
+    strassen(&temp_matrices[6], &temp_matrices[7], &temp_matrices[6], dimension/2, crossover_dimension);
     // array[7] = array[4] + array[3] - array[1] + array[5]; // AE + BG
     sum(&temp_matrices[4], &temp_matrices[3], &temp_matrices[7]);
     diff(&temp_matrices[7], &temp_matrices[1], &temp_matrices[8]);
@@ -231,14 +238,35 @@ int main(int argc, char* argv[]) {
     fp = fopen(inputfile, "r");
     matrix A = construct_matrix(dimension, fp);
     matrix B = construct_matrix(dimension, fp);
-    matrix result;
-    set_matrix(&result, 0, dimension, 0, dimension, initialize_matrix(dimension));
 
-    strassen(&A, &B, &result, dimension);
+    // times the calculation for all possible crossover points
+    time_t t;
+    int crossover_dimension = 2;
+    int optimal_dimension = -1;
+    int best_time = 10E6;
+    int total_time;
+    while (crossover_dimension <= dimension) {
+        matrix result;
+        set_matrix(&result, 0, dimension, 0, dimension, initialize_matrix(dimension));
+        clock_t start = clock();
+        strassen(&A, &B, &result, dimension, crossover_dimension);
+        total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
+        printf("PRODUCT CROSSOVER %d\n", crossover_dimension);
+        print_matrix(&result);
+        printf("\n");
+
+        // if this was a faster calculation, update our records
+        if (total_time < best_time) {
+            optimal_dimension = crossover_dimension;
+            best_time = total_time;
+        }
+        crossover_dimension++;
+    }
+
     // standard_multiplication(&A, &B, &result);
-    // print_matrix(&A);
-    // print_matrix(&B);
-    print_matrix(&result);
 
     return 0;
 }
+
+// every other recurisive strassen call fails, only works for P1 - P7; dig in to the recursive calls for the even ones and see where it fucks up
+// standard multiplication - fr,fc element in A was being overwritten (to -640 from -8)
