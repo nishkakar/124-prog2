@@ -201,16 +201,16 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension) {
     strassen(&temp_matrices[6], &temp_matrices[7], &temp_matrices[6], dimension/2);
     // array[7] = array[4] + array[3] - array[1] + array[5]; // AE + BG
     sum(&temp_matrices[4], &temp_matrices[3], &temp_matrices[7]);
-    diff(&temp_matrices[7], &temp_matrices[1], &temp_matrices[7]);
-    sum(&temp_matrices[7], &temp_matrices[5], &temp_matrices[7]);
+    diff(&temp_matrices[7], &temp_matrices[1], &temp_matrices[8]);
+    sum(&temp_matrices[8], &temp_matrices[5], &temp_matrices[7]);
     // array[5] = array[0] + array[1]; // AF + BH
     sum(&temp_matrices[0], &temp_matrices[1], &temp_matrices[5]);
     // array[1] = array[2] + array[3]; // CE + DG
     sum(&temp_matrices[2], &temp_matrices[3], &temp_matrices[1]);
     // array[3] = array[4] + array[0] - array[2] - array[6] // CF + DH
     sum(&temp_matrices[4], &temp_matrices[0], &temp_matrices[3]);
-    diff(&temp_matrices[3], &temp_matrices[2], &temp_matrices[3]);
-    diff(&temp_matrices[3], &temp_matrices[6], &temp_matrices[3]);
+    diff(&temp_matrices[3], &temp_matrices[2], &temp_matrices[8]);
+    diff(&temp_matrices[8], &temp_matrices[6], &temp_matrices[3]);
 
     // combine
     for (int i = 0; i < dimension; ++i) {
