@@ -298,7 +298,7 @@ int main(int argc, char* argv[]) {
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
 
         printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
-        // print_matrix(&result);
+        print_matrix(&result);
         free_matrix(result.mat, true_dimension);
         printf("\n");
 
