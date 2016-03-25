@@ -56,44 +56,6 @@ matrix construct_matrix(int dimension, FILE* fp) {
     return m;
 }
 
-matrix construct_matrix2(int dimension, FILE* fp) {
-    matrix m;
-    dimension = 2 * dimension;
-    int** matrix = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
-
-    int* pos = (int*) (matrix + dimension);
-    for (int i = 0; i < dimension; ++i) {
-        matrix[i] = pos + i * dimension;
-    }
-
-    char buf[256];
-    for (int i = dimension/2; i < dimension; i++) {
-        for (int j = dimension; j < dimension; j++) {
-            fgets(buf, sizeof(buf), fp);
-            matrix[i][j] = atoi(buf);
-         }
-    }
-
-    m.fr = 0;
-    m.lr = dimension;
-    m.fc = 0;
-    m.lc = dimension;
-    m.mat = matrix;
-
-    return m;
-}
-
-// int** initialize_matrix(int dimension) {
-//     int** mat = malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
-
-//     int* pos = (int*) (mat + dimension);
-//     for (int i = 0; i < dimension * dimension; i += dimension) {
-//         mat[i] = pos + i;
-//     }
-
-//     return mat;
-// }
-
 void print_matrix(matrix* M) {
     // prints out adjacency matrix
     for (int i = M->fr; i < M->lr; ++i) {
@@ -263,7 +225,7 @@ int main(int argc, char* argv[]) {
 
     // times the calculation for all possible crossover points
     time_t t;
-    int crossover_dimension = 2;
+    int crossover_dimension = 32;
     int optimal_dimension = -1;
     float best_time = 10E6;
     float total_time;
@@ -275,7 +237,7 @@ int main(int argc, char* argv[]) {
         strassen(&A, &B, &result, dimension, crossover_dimension);
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
         printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
-        print_diagonals(&result);
+        // print_diagonals(&result);
         free(temp);
         printf("\n");
 
@@ -284,13 +246,10 @@ int main(int argc, char* argv[]) {
             optimal_dimension = crossover_dimension;
             best_time = total_time;
         }
-        crossover_dimension++;
+        crossover_dimension *= 2;
     }
 
     printf("OPTIMAL DIMENSION: %d\n", optimal_dimension);
 
     return 0;
 }
-
-// every other recurisive strassen call fails, only works for P1 - P7; dig in to the recursive calls for the even ones and see where it fucks up
-// standard multiplication - fr,fc element in A was being overwritten (to -640 from -8)
