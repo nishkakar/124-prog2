@@ -284,38 +284,47 @@ int main(int argc, char* argv[]) {
     matrix A = construct_matrix(dimension, true_dimension, fp);
     matrix B = construct_matrix(dimension, true_dimension, fp);
 
+    int crossover_dimension = ceil(true_dimension/2);
+    matrix result;
+    set_matrix(&result, 0, true_dimension, 0, true_dimension, initialize_matrix(true_dimension));
+    strassen(&A, &B, &result, true_dimension, crossover_dimension);
+    print_diagonals(&result, dimension);
+    free_matrix(result.mat, true_dimension);
+
+    // ==============================================
+    // code used to find our experimental crossover value
     // times the calculation for all possible crossover points
-    time_t t;
-    int crossover_dimension = 2;
-    int optimal_dimension = -1;
-    float best_time = 10E6;
-    float total_time;
-    while (crossover_dimension <= true_dimension) {
-        matrix result;
-        set_matrix(&result, 0, true_dimension, 0, true_dimension, initialize_matrix(true_dimension));
-        clock_t start = clock();
-        strassen(&A, &B, &result, true_dimension, crossover_dimension);
-        total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
+    // ==============================================
+    // time_t t;
+    // float best_time = 10E6;
+    // float total_time;
+    // int optimal_dimension = -1;
+    // while (crossover_dimension <= true_dimension) {
+    //     matrix result;
+    //     set_matrix(&result, 0, true_dimension, 0, true_dimension, initialize_matrix(true_dimension));
+    //     clock_t start = clock();
+    //     strassen(&A, &B, &result, true_dimension, crossover_dimension);
+    //     total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
 
-        printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
-        // print_matrix(&result);
-        free_matrix(result.mat, true_dimension);
-        printf("\n");
+    //     printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
+    //     free_matrix(result.mat, true_dimension);
+    //     printf("\n");
 
-        // if this was a faster calculation, update our records
-        if (total_time <= best_time) {
-            optimal_dimension = crossover_dimension;
-            best_time = total_time;
-        }
+    //     // if this was a faster calculation, update our records
+    //     if (total_time <= best_time) {
+    //         optimal_dimension = crossover_dimension;
+    //         best_time = total_time;
+    //     }
 
-        // only check crossover points that are powers of 2
-        // crossover_dimension *= 2;
-        crossover_dimension++;
-    }
+    //     // only check crossover points that are powers of 2
+    //     // crossover_dimension *= 2;
+    //     crossover_dimension++;
+    // }
+    // printf("OPTIMAL DIMENSION: %d\n", optimal_dimension);
+
     
     free_matrix(A.mat, true_dimension);
     free_matrix(B.mat, true_dimension);
-    printf("OPTIMAL DIMENSION: %d\n", optimal_dimension);
 
     return 0;
 }
