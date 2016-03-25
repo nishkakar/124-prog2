@@ -7,11 +7,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-// #include <string.h>
-
-// for seeking
-// #include <sys/types.h>
-// #include <unistd.h>
 
 typedef struct matrix {
     int fr; // the first row we want
@@ -19,8 +14,18 @@ typedef struct matrix {
     int fc; // the first column we want
     int lc; // the last column we don't want
     int** mat;
-} matrix; 
+} matrix;
 
+// frees the matrix of a given dimension
+void free_matrix(int** matrix, int dimension) {
+    for (int i = 0; i < dimension; ++i) {
+        free(matrix[i]);
+    }
+
+    free(matrix);
+}
+
+// initializes matrix of a given dimension
 int** initialize_matrix(int dimension) {
     int** mat = malloc(dimension * sizeof(int*));
 
@@ -31,6 +36,7 @@ int** initialize_matrix(int dimension) {
     return mat;
 }
 
+// checks if the given integer is a power of two
 int isPowerOfTwo(int n){
     if (n == 0) 
         return 0;
@@ -42,18 +48,12 @@ int isPowerOfTwo(int n){
     return 1;
 }
 
-
+// true dimension is the dimension with padding; dimension is the actual dimension of the matrix we care about
+// constructs matrix with the passed in file and dimensions
 matrix construct_matrix(int dimension, int true_dimension, FILE* fp) {
     matrix m; 
     
-    int** matrix = initialize_matrix(true_dimension); // malloc(dimension * sizeof(int*) + dimension * dimension * sizeof(int));
-
-    // int* pos = (int*) (matrix + dimension);
-    // for (int i = 0; i < dimension; ++i) {
-    //     matrix[i] = pos + i * dimension;
-    // }
-    
-    printf("TRUE DIMENSION: %d\n", true_dimension);
+    int** matrix = initialize_matrix(true_dimension);
 
     char buf[256];
     for (int i = 0; i < true_dimension; i++) {
@@ -77,6 +77,7 @@ matrix construct_matrix(int dimension, int true_dimension, FILE* fp) {
     return m;
 }
 
+// largely for debugging purposes, prints the matrix
 void print_matrix(matrix* M) {
     // prints out adjacency matrix
     for (int i = M->fr; i < M->lr; ++i) {
@@ -87,6 +88,7 @@ void print_matrix(matrix* M) {
     }
 }
 
+// prints the diagonals of the matrix, ignoring the padding (uses dimension, not true_dimension)
 void print_diagonals(matrix* M, int dimension) {
     // prints out diagonals
     for (int i = M->fr; i < M->fr + dimension; ++i) {
@@ -94,6 +96,7 @@ void print_diagonals(matrix* M, int dimension) {
     }
 }
 
+// sums two matrices (A+B) and stores the result in C
 void sum(matrix* A, matrix* B, matrix* C) {
     int dim = A->lr - A->fr;
 
@@ -107,6 +110,7 @@ void sum(matrix* A, matrix* B, matrix* C) {
     C->lr = C->lc = dim;
 }
 
+// subtracts two matrices (A-B) and stores the result in C
 void diff(matrix* A, matrix* B, matrix* C) {
     int dim = A->lr - A->fr;
 
@@ -120,6 +124,7 @@ void diff(matrix* A, matrix* B, matrix* C) {
     C->lr = C->lc = dim;
 }
 
+// multiplies two matrices (A*B) and stores the result in C
 void standard_multiplication(matrix* A, matrix* B, matrix* C) {
     int dim = A->lr - A->fr, sum = 0;
 
@@ -138,6 +143,7 @@ void standard_multiplication(matrix* A, matrix* B, matrix* C) {
     }
 }
 
+// initializes a matrix struct with the passed in row & column values and matrix
 void set_matrix(matrix* M, int fr, int lr, int fc, int lc, int** mat) {
     M->fr = fr;
     M->lr = lr;
@@ -146,12 +152,16 @@ void set_matrix(matrix* M, int fr, int lr, int fc, int lc, int** mat) {
     M->mat = mat;
 }
 
+// recursive implementation of strassen's algorithm
+// multiples two matrices (M1*M2) and stores the result in 'result'
+// if the dimension is ever lower than the crossover_dimension, then it will stop the recursion and perform standard multiplication
 void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossover_dimension) {
     if (dimension <= crossover_dimension) {
         standard_multiplication(M1, M2, result);
         return;
     }
 
+    // divides M1 and M2 into the sub-matrices according to the lecture notes
     matrix A, B, C, D, E, F, G, H;
     set_matrix(&A, 0, dimension/2, 0, dimension/2, M1->mat);
     set_matrix(&B, 0, dimension/2, dimension/2, dimension, M1->mat);
@@ -162,59 +172,77 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossov
     set_matrix(&G, dimension/2, dimension, 0, dimension/2, M2->mat);
     set_matrix(&H, dimension/2, dimension, dimension/2, dimension, M2->mat);
 
+    // initializes 9 temporary matrices that we'll use to compute P1-P7 and the final 4 quadrant matrices (which combine to form 'result')
     matrix temp_matrices[9];
     for (int i = 0; i < 9; ++i) {
         set_matrix(&temp_matrices[i], 0, dimension/2, 0, dimension/2, initialize_matrix(dimension/2));
     }
 
-    // array[0] = F-H; // diff(&F, &H, array[0])
+    // F-H
     diff(&F, &H, &temp_matrices[0]);
-    // array[1] = strassen(&A, array[0]); // P1
+    // P1 = A(F-H)
     strassen(&A, &temp_matrices[0], &temp_matrices[1], dimension/2, crossover_dimension);
-    // array[0] = A+B;
+
+    // A+B
     sum(&A, &B, &temp_matrices[0]);
-    // array[2] = strassen(array[0], H); // P2
+    // P2 = (A+B)H
     strassen(&temp_matrices[0], &H, &temp_matrices[2], dimension/2, crossover_dimension);
-    // array[0] = C+D;   
+
+    // C+D 
     sum(&C, &D, &temp_matrices[0]);
-    // array[3] = strassen(array[0], E); // P3
+    // P3 = (C+D)E
     strassen(&temp_matrices[0], &E, &temp_matrices[3], dimension/2, crossover_dimension);
-    // array[0] = G-E;    
+
+    // G-E  
     diff(&G, &E, &temp_matrices[0]);
-    // array[4] = strassen(&D, array[0]); // P4
+    // P4 = D(G-E)
     strassen(&D, &temp_matrices[0], &temp_matrices[4], dimension/2, crossover_dimension);
-    // array[0] = A+D;   
+
+    // A+D   
     sum(&A, &D, &temp_matrices[0]);
-    // array[8] = E+H;    
+    // E+H    
     sum(&E, &H, &temp_matrices[8]);
-    // array[5] = strassen(array[0], array[8]); // P5
+    // P5 = (A+D)(E+H)
     strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[5], dimension/2, crossover_dimension);
-    // array[0] = B-D;
+
+    // B-D
     diff(&B, &D, &temp_matrices[0]);
-    // array[8] = G+H;
+    // G+H
     sum(&G, &H, &temp_matrices[8]);
-    // array[6] = strassen(array[0], array[8]); // P6
+    // P6 = (B-D)(G+H)
     strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[6], dimension/2, crossover_dimension);
-    // array[0] = A-C;
+
+    // A-C
     diff(&A, &C, &temp_matrices[0]);
-    // array[8] = E+F;
+    // E+F
     sum(&E, &F, &temp_matrices[8]);
-    // array[7] = strassen(array[0], array[8]); // P7
+    // P7 = (A-C)(E+F)
     strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[7], dimension/2, crossover_dimension);
-    // array[0] = array[5] + array[4] - array[2] + array[6]; // AE + BG
+
+    // AE + BG = P5 + P4 - P2 + P6
     sum(&temp_matrices[5], &temp_matrices[4], &temp_matrices[0]);
     diff(&temp_matrices[0], &temp_matrices[2], &temp_matrices[8]);
     sum(&temp_matrices[8], &temp_matrices[6], &temp_matrices[0]);
-    // array[6] = array[1] + array[2]; // AF + BH
+
+    // AF + BH = P1 + P2
     sum(&temp_matrices[1], &temp_matrices[2], &temp_matrices[6]);
-    // array[2] = array[3] + array[4]; // CE + DG
+
+    // CE + DG = P3 + P4
     sum(&temp_matrices[3], &temp_matrices[4], &temp_matrices[2]);
-    // array[4] = array[5] + array[1] - array[3] - array[7] // CF + DH
+
+    // CF + DH = P5 + P1 - P3 - P7
     sum(&temp_matrices[5], &temp_matrices[1], &temp_matrices[4]);
     diff(&temp_matrices[4], &temp_matrices[3], &temp_matrices[5]);
     diff(&temp_matrices[5], &temp_matrices[7], &temp_matrices[4]);
 
-    // combine
+    // free P1, P3, P5, P7 and the temporary storage matrix; P2, P4, P6 were overwritten with the quadrant matrices so we still need those
+    free_matrix(temp_matrices[1].mat, dimension/2);
+    free_matrix(temp_matrices[3].mat, dimension/2);
+    free_matrix(temp_matrices[5].mat, dimension/2);
+    free_matrix(temp_matrices[7].mat, dimension/2);
+    free_matrix(temp_matrices[8].mat, dimension/2);
+
+    // combine quadrant matrices into 'result'
     for (int i = 0; i < dimension; ++i) {
         for (int j = 0; j < dimension; ++j) {
             if (i < dimension/2 && j < dimension/2) {
@@ -232,6 +260,12 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossov
         }
     }
 
+    // freeing the 4 quadrant storage matrices
+    free_matrix(temp_matrices[0].mat, dimension/2);
+    free_matrix(temp_matrices[2].mat, dimension/2);
+    free_matrix(temp_matrices[4].mat, dimension/2);
+    free_matrix(temp_matrices[6].mat, dimension/2);
+
     return;
 }
 
@@ -242,15 +276,13 @@ int main(int argc, char* argv[]) {
     FILE* fp;
     fp = fopen(inputfile, "r");
 
+    // checks if padding is necessary; if so, adjusts true_dimension to account for padding
     int true_dimension = dimension;
     if (!isPowerOfTwo(dimension)) {
         true_dimension = (int) pow(2.0, (double) floor(log(dimension)/log(2)) + 1);
     }
     matrix A = construct_matrix(dimension, true_dimension, fp);
     matrix B = construct_matrix(dimension, true_dimension, fp);
-
-    print_matrix(&A);
-    print_matrix(&B);
 
     // times the calculation for all possible crossover points
     time_t t;
@@ -260,14 +292,14 @@ int main(int argc, char* argv[]) {
     float total_time;
     while (crossover_dimension <= true_dimension) {
         matrix result;
-        int** temp = initialize_matrix(true_dimension);
-        set_matrix(&result, 0, true_dimension, 0, true_dimension, temp);
+        set_matrix(&result, 0, true_dimension, 0, true_dimension, initialize_matrix(true_dimension));
         clock_t start = clock();
         strassen(&A, &B, &result, true_dimension, crossover_dimension);
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
+
         printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
         print_diagonals(&result, dimension);
-        free(temp);
+        free_matrix(result.mat, true_dimension);
         printf("\n");
 
         // if this was a faster calculation, update our records
@@ -275,9 +307,14 @@ int main(int argc, char* argv[]) {
             optimal_dimension = crossover_dimension;
             best_time = total_time;
         }
-        crossover_dimension *= 2;
-    }
 
+        // only check crossover points that are powers of 2
+        // crossover_dimension *= 2;
+        crossover_dimension++;
+    }
+    
+    free_matrix(A.mat, true_dimension);
+    free_matrix(B.mat, true_dimension);
     printf("OPTIMAL DIMENSION: %d\n", optimal_dimension);
 
     return 0;
