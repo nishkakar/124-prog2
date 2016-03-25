@@ -186,39 +186,39 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossov
     }
 
     // array[0] = F-H; // diff(&F, &H, array[0])
-    diff(&F, &H, &temp_matrices[0]);
+    diff(&F, &H, &temp_matrices[1]);
     // array[0] = strassen(&A, array[0]); // P1
-    strassen(&A, &temp_matrices[0], &temp_matrices[0], dimension/2, crossover_dimension);
+    strassen(&A, &temp_matrices[1], &temp_matrices[0], dimension/2, crossover_dimension);
     // array[1] = A+B;
-    sum(&A, &B, &temp_matrices[1]);
+    sum(&A, &B, &temp_matrices[2]);
     // array[1] = strassen(array[1], H); // P2
-    strassen(&temp_matrices[1], &H, &temp_matrices[1], dimension/2, crossover_dimension);
+    strassen(&temp_matrices[2], &H, &temp_matrices[1], dimension/2, crossover_dimension);
     // array[2] = C+D;   
-    sum(&C, &D, &temp_matrices[2]);
+    sum(&C, &D, &temp_matrices[3]);
     // array[2] = strassen(array[2], E); // P3
-    strassen(&temp_matrices[2], &E, &temp_matrices[2], dimension/2, crossover_dimension);
+    strassen(&temp_matrices[3], &E, &temp_matrices[2], dimension/2, crossover_dimension);
     // array[3] = G-E;    
-    diff(&G, &E, &temp_matrices[3]);
+    diff(&G, &E, &temp_matrices[4]);
     // array[3] = strassen(&D, array[3]); // P4
-    strassen(&D, &temp_matrices[3], &temp_matrices[3], dimension/2, crossover_dimension);
+    strassen(&D, &temp_matrices[4], &temp_matrices[3], dimension/2, crossover_dimension);
     // array[4] = A+D;   
-    sum(&A, &D, &temp_matrices[4]);
+    sum(&A, &D, &temp_matrices[5]);
     // array[5] = E+H;    
-    sum(&E, &H, &temp_matrices[5]);
+    sum(&E, &H, &temp_matrices[6]);
     // array[4] = strassen(array[4], array[5]); // P5
-    strassen(&temp_matrices[4], &temp_matrices[5], &temp_matrices[4], dimension/2, crossover_dimension);
+    strassen(&temp_matrices[5], &temp_matrices[6], &temp_matrices[4], dimension/2, crossover_dimension);
     // array[5] = B-D;
-    diff(&B, &D, &temp_matrices[5]);
+    diff(&B, &D, &temp_matrices[6]);
     // array[6] = G+H;
-    sum(&G, &H, &temp_matrices[6]);
+    sum(&G, &H, &temp_matrices[7]);
     // array[5] = strassen(array[5], array[6]); // P6
-    strassen(&temp_matrices[5], &temp_matrices[6], &temp_matrices[5], dimension/2, crossover_dimension);
+    strassen(&temp_matrices[6], &temp_matrices[7], &temp_matrices[5], dimension/2, crossover_dimension);
     // array[6] = A-C;
-    diff(&A, &C, &temp_matrices[6]);
+    diff(&A, &C, &temp_matrices[7]);
     // array[7] = E+F;
-    sum(&E, &F, &temp_matrices[7]);
+    sum(&E, &F, &temp_matrices[8]);
     // array[6] = strassen(array[6], array[7]); // P7
-    strassen(&temp_matrices[6], &temp_matrices[7], &temp_matrices[6], dimension/2, crossover_dimension);
+    strassen(&temp_matrices[7], &temp_matrices[8], &temp_matrices[6], dimension/2, crossover_dimension);
     // array[7] = array[4] + array[3] - array[1] + array[5]; // AE + BG
     sum(&temp_matrices[4], &temp_matrices[3], &temp_matrices[7]);
     diff(&temp_matrices[7], &temp_matrices[1], &temp_matrices[8]);
