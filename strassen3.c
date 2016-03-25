@@ -156,11 +156,6 @@ void set_matrix(matrix* M, int fr, int lr, int fc, int lc, int** mat) {
 // multiples two matrices (M1*M2) and stores the result in 'result'
 // if the dimension is ever lower than the crossover_dimension, then it will stop the recursion and perform standard multiplication
 void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossover_dimension) {
-    if (dimension <= crossover_dimension) {
-        standard_multiplication(M1, M2, result);
-        return;
-    }
-
     // divides M1 and M2 into the sub-matrices according to the lecture notes
     matrix A, B, C, D, E, F, G, H;
     set_matrix(&A, 0, dimension/2, 0, dimension/2, M1->mat);
@@ -181,43 +176,64 @@ void strassen(matrix* M1, matrix* M2, matrix* result, int dimension, int crossov
     // F-H
     diff(&F, &H, &temp_matrices[0]);
     // P1 = A(F-H)
-    strassen(&A, &temp_matrices[0], &temp_matrices[1], dimension/2, crossover_dimension);
+    if (dimension/2 <= crossover_dimension)
+        return standard_multiplication(&A, &temp_matrices[0], &temp_matrices[1]);
+    else
+        strassen(&A, &temp_matrices[0], &temp_matrices[1], dimension/2, crossover_dimension);
 
     // A+B
     sum(&A, &B, &temp_matrices[0]);
     // P2 = (A+B)H
-    strassen(&temp_matrices[0], &H, &temp_matrices[2], dimension/2, crossover_dimension);
+    if (dimension/2 <= crossover_dimension)
+        return standard_multiplication(&temp_matrices[0], &H, &temp_matrices[2]);    
+    else
+        strassen(&temp_matrices[0], &H, &temp_matrices[2], dimension/2, crossover_dimension);
 
     // C+D 
     sum(&C, &D, &temp_matrices[0]);
     // P3 = (C+D)E
-    strassen(&temp_matrices[0], &E, &temp_matrices[3], dimension/2, crossover_dimension);
+    if (dimension/2 <= crossover_dimension)
+        return standard_multiplication(&temp_matrices[0], &E, &temp_matrices[3]);    
+    else
+        strassen(&temp_matrices[0], &E, &temp_matrices[3], dimension/2, crossover_dimension);
 
     // G-E  
     diff(&G, &E, &temp_matrices[0]);
     // P4 = D(G-E)
-    strassen(&D, &temp_matrices[0], &temp_matrices[4], dimension/2, crossover_dimension);
+    if (dimension/2 <= crossover_dimension)
+        return standard_multiplication(&D, &temp_matrices[0], &temp_matrices[4]);    
+    else
+        strassen(&D, &temp_matrices[0], &temp_matrices[4], dimension/2, crossover_dimension);
 
     // A+D   
     sum(&A, &D, &temp_matrices[0]);
     // E+H    
     sum(&E, &H, &temp_matrices[8]);
     // P5 = (A+D)(E+H)
-    strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[5], dimension/2, crossover_dimension);
+    if (dimension/2 <= crossover_dimension)
+        return standard_multiplication(&temp_matrices[0], &temp_matrices[8], &temp_matrices[5]);    
+    else
+        strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[5], dimension/2, crossover_dimension);
 
     // B-D
     diff(&B, &D, &temp_matrices[0]);
     // G+H
     sum(&G, &H, &temp_matrices[8]);
     // P6 = (B-D)(G+H)
-    strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[6], dimension/2, crossover_dimension);
+    if (dimension/2 <= crossover_dimension)
+        return standard_multiplication(&temp_matrices[0], &temp_matrices[8], &temp_matrices[6]);    
+    else
+        strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[6], dimension/2, crossover_dimension);
 
     // A-C
     diff(&A, &C, &temp_matrices[0]);
     // E+F
     sum(&E, &F, &temp_matrices[8]);
     // P7 = (A-C)(E+F)
-    strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[7], dimension/2, crossover_dimension);
+    if (dimension/2 <= crossover_dimension)
+        return standard_multiplication(&temp_matrices[0], &temp_matrices[8], &temp_matrices[7]);    
+    else
+        strassen(&temp_matrices[0], &temp_matrices[8], &temp_matrices[7], dimension/2, crossover_dimension);
 
     // AE + BG = P5 + P4 - P2 + P6
     sum(&temp_matrices[5], &temp_matrices[4], &temp_matrices[0]);
@@ -298,7 +314,7 @@ int main(int argc, char* argv[]) {
         total_time = (float) (clock() - start) / CLOCKS_PER_SEC;
 
         printf("PRODUCT CROSSOVER %d %f\n", crossover_dimension, total_time);
-        print_diagonals(&result, dimension);
+        print_matrix(&result);
         free_matrix(result.mat, true_dimension);
         printf("\n");
 
